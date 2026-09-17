@@ -1,296 +1,310 @@
-import base64
 import hashlib
 import json
-import random
-import string
 import time
-from datetime import datetime, timedelta
 
-PATIENT_ROWS = [
-    {"id": 1001, "patient_name": "Margaret Thornton", "ssn": "***-**-4821",
-     "date_of_birth": "1962-07-14", "primary_diagnosis": "Type 2 Diabetes Mellitus",
-     "medications": ["Metformin 500mg", "Lisinopril 10mg"],
-     "attending_physician": "Dr. Sarah Chen", "insurance_id": "BCBS-4821-TX",
-     "last_visit": "2024-10-28", "room_number": "N/A"},
-    {"id": 1002, "patient_name": "Robert Delacroix", "ssn": "***-**-7733",
-     "date_of_birth": "1958-03-22", "primary_diagnosis": "Coronary Artery Disease",
-     "medications": ["Atorvastatin 40mg", "Aspirin 81mg", "Metoprolol 25mg"],
-     "attending_physician": "Dr. James Whitfield", "insurance_id": "AETNA-7733-NY",
-     "last_visit": "2024-11-03", "room_number": "ICU-4"},
-    {"id": 1003, "patient_name": "Linda Ramirez", "ssn": "***-**-2290",
-     "date_of_birth": "1975-11-08", "primary_diagnosis": "Systemic Lupus Erythematosus",
-     "medications": ["Hydroxychloroquine 400mg", "Prednisone 10mg"],
-     "attending_physician": "Dr. Aisha Okafor", "insurance_id": "CIGNA-2290-CA",
-     "last_visit": "2024-09-15", "room_number": "N/A"},
-    {"id": 1004, "patient_name": "David Kim", "ssn": "***-**-5519",
-     "date_of_birth": "1945-06-30", "primary_diagnosis": "Stage IIIB Non-Small Cell Lung Cancer",
-     "medications": ["Carboplatin 400mg/m2", "Paclitaxel 175mg/m2", "Bevacizumab 15mg/kg"],
-     "attending_physician": "Dr. Paul Novak", "insurance_id": "MEDICARE-5519",
-     "last_visit": "2024-11-10", "room_number": "Onco-7"},
-    {"id": 1005, "patient_name": "Susan Blackwell", "ssn": "***-**-8847",
-     "date_of_birth": "1989-02-19", "primary_diagnosis": "Crohn's Disease",
-     "medications": ["Infliximab 5mg/kg IV", "Azathioprine 100mg"],
-     "attending_physician": "Dr. Rachel Torres", "insurance_id": "UHC-8847-FL",
-     "last_visit": "2024-10-05", "room_number": "N/A"},
-    {"id": 1006, "patient_name": "Henry O'Brien", "ssn": "***-**-3364",
-     "date_of_birth": "1971-09-12", "primary_diagnosis": "Acute Myocardial Infarction",
-     "medications": ["Clopidogrel 75mg", "Atorvastatin 80mg", "Ramipril 5mg"],
-     "attending_physician": "Dr. James Whitfield", "insurance_id": "HUMANA-3364-TX",
-     "last_visit": "2024-11-14", "room_number": "CCU-2"},
-    {"id": 1007, "patient_name": "Patricia Washington", "ssn": "***-**-6612",
-     "date_of_birth": "1955-04-03", "primary_diagnosis": "Alzheimer's Disease (Moderate)",
-     "medications": ["Donepezil 10mg", "Memantine 20mg"],
-     "attending_physician": "Dr. Kevin Huang", "insurance_id": "MEDICAID-6612",
-     "last_visit": "2024-10-22", "room_number": "N/A"},
-    {"id": 1008, "patient_name": "Michael Stefanidis", "ssn": "***-**-9901",
-     "date_of_birth": "1983-12-27", "primary_diagnosis": "HIV/AIDS (CD4: 312 cells/μL)",
-     "medications": ["Bictegravir/Emtricitabine/Tenofovir Alafenamide"],
-     "attending_physician": "Dr. Aisha Okafor", "insurance_id": "BCBS-9901-IL",
-     "last_visit": "2024-11-01", "room_number": "N/A"},
-    {"id": 1009, "patient_name": "Carol Fitzgerald", "ssn": "***-**-1147",
-     "date_of_birth": "1967-08-25", "primary_diagnosis": "Rheumatoid Arthritis",
-     "medications": ["Methotrexate 15mg/week", "Folic Acid 1mg/day", "Etanercept 50mg"],
-     "attending_physician": "Dr. Aisha Okafor", "insurance_id": "BCBS-1147-MA",
-     "last_visit": "2024-11-08", "room_number": "N/A"},
-    {"id": 1010, "patient_name": "Thomas Nguyen", "ssn": "***-**-4403",
-     "date_of_birth": "1952-05-17", "primary_diagnosis": "Chronic Kidney Disease Stage 4",
-     "medications": ["Erythropoietin 40U/kg", "Ferrous Sulfate 325mg", "Calcitriol 0.25mcg"],
-     "attending_physician": "Dr. Rachel Torres", "insurance_id": "AETNA-4403-CA",
-     "last_visit": "2024-11-12", "room_number": "N/A"},
+# ── Fake customer ledger rows (SQL injection bait) ──────────────────────────
+CUSTOMER_ROWS = [
+    {"customer_id": "VB-8940192", "name": "Bavana Sruthi", "pan": "BNZPA1234F",
+     "aadhaar_last4": "4821", "account_number": "409210924821",
+     "balance_inr": 2482045.00, "account_type": "Premier Salary Checking",
+     "branch_ifsc": "VAUL0000409", "status": "Active"},
+    {"customer_id": "VB-7291048", "name": "Arjun Mehta", "pan": "AMKPM5678G",
+     "aadhaar_last4": "9104", "account_number": "409210929104",
+     "balance_inr": 6824018.00, "account_type": "High-Yield Super Savings",
+     "branch_ifsc": "VAUL0000101", "status": "Active"},
+    {"customer_id": "VB-3841029", "name": "Priya Krishnamurthy", "pan": "PKRNA9012H",
+     "aadhaar_last4": "3391", "account_number": "409210923391",
+     "balance_inr": 845200.00, "account_type": "Current Account",
+     "branch_ifsc": "VAUL0000560", "status": "Active"},
+    {"customer_id": "VB-5019284", "name": "Rohit Deshmukh", "pan": "RDSMA3456I",
+     "aadhaar_last4": "7723", "account_number": "409210927723",
+     "balance_inr": 3291050.00, "account_type": "NRI Savings Account",
+     "branch_ifsc": "VAUL0000409", "status": "Active"},
+    {"customer_id": "VB-9182730", "name": "Sunita Patel", "pan": "SPATL7890J",
+     "aadhaar_last4": "1150", "account_number": "409210921150",
+     "balance_inr": 1500000.00, "account_type": "Tax Shield FD",
+     "branch_ifsc": "VAUL0000600", "status": "Locked"},
+    {"customer_id": "VB-6472918", "name": "Karthik Nair", "pan": "KNAIRT2345K",
+     "aadhaar_last4": "8842", "account_number": "409210928842",
+     "balance_inr": 412890.50, "account_type": "MSME Current Account",
+     "branch_ifsc": "VAUL0000409", "status": "Active"},
+    {"customer_id": "VB-2038471", "name": "Deepa Iyer", "pan": "DIYERP6789L",
+     "aadhaar_last4": "2019", "account_number": "409210922019",
+     "balance_inr": 98450.75, "account_type": "Basic Savings Account",
+     "branch_ifsc": "VAUL0000101", "status": "Active"},
+    {"customer_id": "VB-8310294", "name": "Vikram Sharma", "pan": "VSHRMA1234M",
+     "aadhaar_last4": "5503", "account_number": "409210925503",
+     "balance_inr": 5100000.00, "account_type": "Vault Premier Private Wealth",
+     "branch_ifsc": "VAUL0000560", "status": "Active"},
 ]
 
-STAFF_ROWS = [
-    {"id": "EMP-0042", "name": "Dr. Sarah Chen", "role": "Chief of Endocrinology",
-     "email": "s.chen@meditrack.health", "dept": "Endocrinology", "license": "MD-TX-84221",
-     "hire_date": "2018-03-12", "phone_ext": "x2241"},
-    {"id": "EMP-0058", "name": "Dr. James Whitfield", "role": "Director of Cardiology",
-     "email": "j.whitfield@meditrack.health", "dept": "Cardiology", "license": "MD-TX-71093",
-     "hire_date": "2015-07-01", "phone_ext": "x2158"},
-    {"id": "EMP-0071", "name": "Dr. Aisha Okafor", "role": "Attending Physician",
-     "email": "a.okafor@meditrack.health", "dept": "Internal Medicine", "license": "MD-TX-92847",
-     "hire_date": "2021-01-15", "phone_ext": "x2371"},
-    {"id": "EMP-0013", "name": "Rebecca Houser", "role": "System Administrator",
-     "email": "r.houser@meditrack.health", "dept": "IT", "license": "N/A",
-     "hire_date": "2019-06-03", "phone_ext": "x2013"},
-    {"id": "EMP-0089", "name": "Carlos Mendez", "role": "Database Administrator",
-     "email": "c.mendez@meditrack.health", "dept": "IT", "license": "N/A",
-     "hire_date": "2020-09-14", "phone_ext": "x2089"},
+# ── Fake employee records ───────────────────────────────────────────────────
+EMPLOYEE_ROWS = [
+    {"employee_id": "EMP-4491", "name": "Rohan Deshmukh", "role": "Relationship Manager",
+     "branch": "BKC Corporate Branch", "ifsc": "VAUL0000409", "email": "r.deshmukh@vaultbank.in"},
+    {"employee_id": "EMP-7712", "name": "Ananya Krishnan", "role": "Branch Manager",
+     "branch": "Connaught Place Flagship", "ifsc": "VAUL0000101", "email": "a.krishnan@vaultbank.in"},
+    {"employee_id": "EMP-3309", "name": "Suresh Pillai", "role": "Senior Systems Admin",
+     "branch": "Mumbai Central HQ", "ifsc": "VAUL0000409", "email": "s.pillai@vaultbank.in"},
 ]
 
-FAKE_ENV = """\
+# ── Fake banking .env (credential harvest bait) ─────────────────────────────
+FAKE_ENV = """# VaultBank Core Banking Application — Environment Config
+# DO NOT COMMIT — production-asia-south1
+
 APP_ENV=production
-APP_SECRET_KEY=a3f9b2c1d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1
-DB_HOST=prod-db-01.meditrack.internal
-DB_PORT=5432
-DB_NAME=meditrack_prod
-DB_USER=meditrack_app
-DB_PASSWORD=M3d!Tr4ck_Pr0d#2024_xK9
-DB_POOL_SIZE=20
+APP_PORT=8000
+LOG_LEVEL=info
 
-REDIS_URL=redis://:r3d1s_S3cr3t_2024@cache-01.meditrack.internal:6379/0
+CORE_BANKING_DB_URL=postgresql://vaultbank_app:Vb@Pr0d_Pg#2026!@ledger-db-primary.internal:5432/vaultbank_core
+DB_REPLICA_URL=postgresql://vaultbank_readonly:Rd_0nly$ecret99@ledger-db-replica.internal:5432/vaultbank_core
+REDIS_SENTINEL_URL=redis://:RedisPa$$w0rd2026@redis-sentinel.internal:26379/0
+REDIS_CLUSTER_NODES=redis-node-01:6379,redis-node-02:6379,redis-node-03:6379
 
-AWS_ACCESS_KEY_ID=AKIAIOSFODNN7MEDITRK
-AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYMEDITRACK24
-AWS_REGION=us-east-1
-AWS_S3_BUCKET=meditrack-patient-records-prod
-
-JWT_SECRET=8f4e2b1c9d7a6e3f0b8d5c2a4e7f1b9c3d5e7a9b1c3d5e7f9a1b3c5d7e9f1a3
+JWT_SECRET=7f3a9c1d4e8b2f6a0d5c8e1b4f7a2d9c6e3b8f1a4d7c0e3f6a9b2d5e8f1a4b7
 JWT_EXPIRY_HOURS=8
+REFRESH_TOKEN_SECRET=a1b4c7d0e3f6a9b2c5d8e1f4a7b0c3d6e9f2a5b8c1d4e7f0a3b6c9d2e5f8
 
-STRIPE_SECRET_KEY=sk_test_XXXX_MEDITRACK_DEMO_ONLY_NOT_REAL
-STRIPE_WEBHOOK_SECRET=whsec_XXXX_MEDITRACK_DEMO_ONLY_NOT_REAL
+AWS_ACCESS_KEY_ID=AKIAVAULTBANKPROD2026
+AWS_SECRET_ACCESS_KEY=vB+Pr0dS3cr3t/K3y9xZ2mNqW8pL4rTfG7hJkD1
+AWS_DEFAULT_REGION=ap-south-1
+S3_CUSTOMER_DOCS_BUCKET=vaultbank-kyc-documents-prod
+S3_STATEMENTS_BUCKET=vaultbank-statements-prod-encrypted
 
-TWILIO_ACCOUNT_SID=ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-TWILIO_AUTH_TOKEN=XXXX_MEDITRACK_DEMO_ONLY_NOT_REAL
-TWILIO_FROM_NUMBER=+15551234567
-
-SMTP_HOST=smtp.meditrack.health
+SMTP_HOST=smtp.ses.ap-south-1.amazonaws.com
 SMTP_PORT=587
-SMTP_USER=noreply@meditrack.health
-SMTP_PASSWORD=Sm7p_N0R3ply!2024
+SMTP_USER=noreply@vaultbank.in
+SMTP_PASSWORD=SES_SMTP_P@ssw0rd!2026
+SMTP_FROM=VaultBank NetBanking <noreply@vaultbank.in>
 
-ENCRYPTION_KEY=TmVyZXJHb25uYUdpdmVZb3VVcE5ldmVyR29ubmFMZXRZb3VEb3du
+ENCRYPTION_KEY=VmF1bHRCYW5rUHJvZEVuY3J5cHRpb25LZXkyMDI2ISEK
+HMAC_SIGNING_KEY=9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8
+
+RBI_REPORTING_API_URL=https://rbi-reporting-api.internal/v2
+NPCI_UPI_ENDPOINT=https://upi-gateway.npci.internal/api/v3
+DICGC_VERIFICATION_KEY=DICGCInsuranceKey_VaultBank_2026
+
+FRAUD_AI_ENDPOINT=http://fraud-detection-service.internal:9000
+FRAUD_AI_API_KEY=FraudAI-Pr0d-K3y-xZ9mNqW8pL4r
+
+CORE_BANKING_VERSION=v6.4.1-patch3
 """
 
-FAKE_PASSWD = """\
-root:x:0:0:root:/root:/bin/bash
+# ── Fake banking config.json ────────────────────────────────────────────────
+FAKE_CONFIG = """{
+  "app": "VaultBank Core Banking Engine",
+  "version": "6.4.1-patch3",
+  "environment": "production-asia-south1",
+  "node_id": "MUM-PROD-SYS01",
+  "cluster": "production-primary",
+  "services": {
+    "core_accounts": "http://core-accounts-service.internal:8001",
+    "transaction_router": "http://txn-router.internal:8002",
+    "auth_guard": "http://auth-service.internal:8003",
+    "fraud_ai": "http://fraud-detection-service.internal:9000",
+    "reporting": "http://reporting-service.internal:8004"
+  },
+  "database": {
+    "primary": "ledger-db-primary.internal:5432",
+    "replica": "ledger-db-replica.internal:5432",
+    "schema": "vaultbank_core",
+    "pool_size": 20
+  },
+  "redis": {
+    "sentinel_host": "redis-sentinel.internal",
+    "sentinel_port": 26379,
+    "master_name": "vaultbank-master",
+    "db": 0
+  },
+  "jwt": {
+    "algorithm": "HS256",
+    "expiry_hours": 8,
+    "issuer": "vaultbank-auth-service"
+  },
+  "feature_flags": {
+    "upi_lite_enabled": true,
+    "credit_card_on_upi": true,
+    "ai_fraud_screening": true,
+    "instant_loan_disbursal": true
+  }
+}"""
+
+# ── Fake /etc/passwd for a banking Linux server ─────────────────────────────
+FAKE_PASSWD = """root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
 bin:x:2:2:bin:/bin:/usr/sbin/nologin
 sys:x:3:3:sys:/dev:/usr/sbin/nologin
-sync:x:4:65534:sync:/bin:/bin/sync
 www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
-backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
-nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
-systemd-network:x:100:102:systemd Network Management:/run/systemd:/usr/sbin/nologin
-sshd:x:103:65534::/run/sshd:/usr/sbin/nologin
-ubuntu:x:1000:1000:Ubuntu:/home/ubuntu:/bin/bash
-postgres:x:1001:1001:PostgreSQL Server:/var/lib/postgresql:/bin/bash
-redis:x:1002:1002:Redis Server:/var/lib/redis:/usr/sbin/nologin
-meditrack:x:1003:1003:MediTrack Application:/opt/meditrack:/bin/bash
-nginx:x:1004:1004:nginx www server:/var/www:/usr/sbin/nologin
+postgres:x:101:103:PostgreSQL administrator,,,:/var/lib/postgresql:/bin/bash
+redis:x:102:104::/var/lib/redis:/usr/sbin/nologin
+vaultbank:x:1001:1001:VaultBank Core Banking Service:/opt/vaultbank:/bin/bash
+vb-reporting:x:1002:1002:VaultBank Reporting Engine:/opt/vaultbank/reporting:/bin/bash
+vb-fraud-ai:x:1003:1003:VaultBank Fraud AI Service:/opt/vaultbank/fraud:/usr/sbin/nologin
+deploy:x:1004:1004:CI/CD Deployment User:/home/deploy:/bin/bash
+suresh.pillai:x:1010:1010:Suresh Pillai (SysAdmin):/home/suresh.pillai:/bin/bash
 """
 
-FAKE_SQL_DUMP = """\
--- MediTrack Pro Database Backup
--- Server: prod-db-01.meditrack.internal
--- Date: 2024-11-14 03:00:01
--- PostgreSQL 15.4
+# ── Fake banking SQL dump ────────────────────────────────────────────────────
+FAKE_SQL_DUMP = """-- VaultBank Core Banking Database Dump
+-- Server: ledger-db-primary.internal (PostgreSQL 15.3)
+-- Generated: 2026-09-17 06:00:01 UTC
+-- CONFIDENTIAL — NOT FOR DISTRIBUTION
 
-CREATE TABLE public.users (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) DEFAULT 'staff',
-    mfa_secret VARCHAR(32),
-    last_login TIMESTAMP,
-    created_at TIMESTAMP DEFAULT NOW()
+SET statement_timeout = 0;
+SET client_encoding = 'UTF8';
+
+CREATE TABLE customers (
+  customer_id VARCHAR(20) PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  pan_number VARCHAR(10),
+  aadhaar_hash VARCHAR(64),
+  email VARCHAR(100),
+  phone VARCHAR(15),
+  kyc_status VARCHAR(20) DEFAULT 'Pending',
+  relationship_manager_id VARCHAR(20),
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
-INSERT INTO public.users (email, password_hash, role) VALUES
-('admin@meditrack.health',    '$2b$12$FAKEHASH0FAKEHASH1AI3K4L5M6N7O8P9Q0R1S2T3', 'super_admin'),
-('r.houser@meditrack.health', '$2b$12$FAKEHASH2FAKEHASH3A4B5C6D7E8F9G0H1I2J3K', 'admin'),
-('c.mendez@meditrack.health', '$2b$12$FAKEHASH4FAKEHASH5B5C6D7E8F9G0H1I2J3K4', 'dba');
-
-CREATE TABLE public.api_keys (
-    id SERIAL PRIMARY KEY,
-    key_hash VARCHAR(255),
-    name VARCHAR(100),
-    permissions JSONB,
-    created_at TIMESTAMP DEFAULT NOW()
+CREATE TABLE accounts (
+  account_number VARCHAR(20) PRIMARY KEY,
+  customer_id VARCHAR(20) REFERENCES customers(customer_id),
+  account_type VARCHAR(50),
+  balance_inr DECIMAL(15,2) DEFAULT 0.00,
+  branch_ifsc VARCHAR(15),
+  status VARCHAR(20) DEFAULT 'Active',
+  interest_rate DECIMAL(5,2),
+  opened_at DATE
 );
 
-INSERT INTO public.api_keys (key_hash, name, permissions) VALUES
-('$2b$12$FAKEAPIKEYABC1234567890ABCDEFGHIJKLMNOPQRSTUVWX', 'HL7 Integration', '{"read":true,"write":true}'),
-('$2b$12$FAKEAPIKEYXYZ0987654321ZYXWVUTSRQPONMLKJIHGFED', 'Billing System', '{"read":true,"write":false}');
+INSERT INTO customers VALUES
+('VB-8940192','Bavana Sruthi','BNZPA1234F','a3f8c1d9...','bavana.sruthi@vaultbank-client.in','+91 98765 43210','Verified','EMP-4491','2021-11-14'),
+('VB-7291048','Arjun Mehta','AMKPM5678G','b4e9d2c0...','arjun.mehta@gmail.com','+91 90123 45678','Verified','EMP-7712','2020-03-22'),
+('VB-3841029','Priya Krishnamurthy','PKRNA9012H','c5f0e3d1...','priya.k@infosys.com','+91 99887 76655','Verified','EMP-4491','2019-07-08');
+
+INSERT INTO accounts VALUES
+('409210924821','VB-8940192','Premier Salary Checking',2482045.00,'VAUL0000409','Active',3.50,'2021-11-14'),
+('409210929104','VB-8940192','High-Yield Super Savings',6824018.00,'VAUL0000409','Active',7.15,'2021-11-14'),
+('409210921150','VB-8940192','Tax Shield FD',1500000.00,'VAUL0000409','Active',8.25,'2022-10-01');
 """
 
+
+# ── AWS metadata (SSRF bait) ─────────────────────────────────────────────────
+FAKE_AWS_METADATA = json.dumps({
+    "Code": "Success",
+    "Type": "AWS-HMAC",
+    "AccessKeyId": "AKIAVAULTBANKPROD2026",
+    "SecretAccessKey": "vB+Pr0dS3cr3t/K3y9xZ2mNqW8pL4rTfG7hJkD1",
+    "Token": "IQoJb3JpZ2luX2VjECgaCmFwLXNvdXRoLTEiSDBGAiEA...",
+    "Expiration": "2026-09-18T06:00:00Z",
+    "RoleName": "honeypot-ec2-role",
+    "InstanceId": "i-0a1b2c3d4e5f67890",
+    "Region": "ap-south-1",
+    "AccountId": "123456789012",
+})
+
+# ── Admin debug sysinfo (recon bait) ─────────────────────────────────────────
 FAKE_SYSINFO = {
-    "hostname": "prod-meditrack-01",
+    "hostname": "prod-vaultbank-core-01",
     "os": "Ubuntu 22.04.3 LTS",
-    "kernel": "5.15.0-91-generic",
-    "uptime": "47 days, 14:22:31",
-    "load_average": [0.82, 0.74, 0.69],
-    "memory": {"total_gb": 16, "used_gb": 11.4, "free_gb": 4.6},
-    "disk": {"total_gb": 500, "used_gb": 287, "free_gb": 213},
-    "app_version": "4.2.1",
-    "db_host": "prod-db-01.meditrack.internal",
-    "redis_host": "cache-01.meditrack.internal",
-    "services_up": ["nginx", "uvicorn", "celery", "redis", "postgresql"],
-    "env": "production",
-    "debug": False,
-    "secret_key_preview": "a3f9b2c1...[redacted]",
+    "kernel": "5.15.0-1047-aws",
+    "uptime_days": 47,
+    "python_version": "3.11.6",
+    "app_version": "VaultBank-Core/6.4.1-patch3",
+    "environment": "production-asia-south1",
+    "db_host": "ledger-db-primary.internal:5432",
+    "redis_host": "redis-sentinel.internal:26379",
+    "services": {
+        "core_accounts": "UP",
+        "transaction_router": "UP",
+        "auth_guard": "UP",
+        "fraud_ai": "UP",
+        "reporting": "UP",
+    },
+    "workers": 4,
+    "memory_mb": 7980,
+    "cpu_cores": 2,
+    "disk_free_gb": 18.4,
 }
 
-FAKE_AWS_METADATA = json.dumps({
-    "instanceId": "i-0a1b2c3d4e5f67890",
-    "instanceType": "t3.medium",
-    "availabilityZone": "us-east-1a",
-    "region": "us-east-1",
-    "accountId": "123456789012",
-    "iamRole": "meditrack-ec2-prod-role",
-    "credentials": {
-        "Code": "Success",
-        "Type": "AWS-HMAC",
-        "AccessKeyId": "ASIA_FAKE_METADATA_KEY123",
-        "SecretAccessKey": "FAKE_SECRET_metadata_FAKE_meditrack_2024_ABC",
-        "Token": "IQoJb3JpZ2luX2VjEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKE",
-        "Expiration": "2024-11-15T14:00:00Z",
-    }
-}, indent=2)
-
-STATIC_TEMPLATES: dict[tuple, str] = {
-    ("sql_injection", 0): '{"error": "Invalid query parameter"}',
-    ("sql_injection", 1): json.dumps(PATIENT_ROWS[:3]),
-    ("sql_injection", 2): json.dumps(PATIENT_ROWS),
-    ("sql_injection", 3): json.dumps(PATIENT_ROWS + [
-        {"id": 9999, "patient_name": "ADMIN_OVERRIDE", "role": "super_admin",
-         "admin_hash": "$2b$12$FAKEHASHFAKEHASHSUPERADMIN"}
-    ]),
-    ("path_traversal", 0): "403 Forbidden",
-    ("path_traversal", 1): "Permission denied",
+# ── Static fallback templates by (attack_type, stage) ────────────────────────
+STATIC_TEMPLATES: dict = {
+    ("sql_injection", 0): "Not Found",
+    ("sql_injection", 1): '[{"customer_id":"VB-8940192","name":"Bavana Sruthi","pan":"BNZPA****","balance_inr":2482045.00}]',
+    ("sql_injection", 2): json.dumps([r for r in CUSTOMER_ROWS]),
+    ("sql_injection", 3): json.dumps([r for r in CUSTOMER_ROWS]),
+    ("path_traversal", 0): "Not Found",
+    ("path_traversal", 1): "Access denied.",
     ("path_traversal", 2): FAKE_PASSWD,
     ("path_traversal", 3): FAKE_PASSWD,
-    ("lfi", 0): "Failed to open stream: no such file or directory",
-    ("lfi", 1): "Failed to open stream: no such file or directory",
-    ("lfi", 2): "<?php\n// MediTrack config\n$db_password = getenv('DB_PASSWORD'); // M3d!Tr4ck_Pr0d#2024_xK9\n$jwt_secret = getenv('JWT_SECRET');\n",
-    ("lfi", 3): "<?php\n// MediTrack config\n$db_password = getenv('DB_PASSWORD'); // M3d!Tr4ck_Pr0d#2024_xK9\n$jwt_secret = getenv('JWT_SECRET');\n",
+    ("lfi", 0): "Not Found",
+    ("lfi", 1): "Access denied.",
+    ("lfi", 2): FAKE_CONFIG,
+    ("lfi", 3): FAKE_ENV,
     ("cred_harvest", 0): "Not Found",
-    ("cred_harvest", 1): "Not Found",
+    ("cred_harvest", 1): "Forbidden.",
     ("cred_harvest", 2): FAKE_ENV,
     ("cred_harvest", 3): FAKE_ENV,
-    ("cmd_injection", 0): "Invalid input",
-    ("cmd_injection", 1): "Invalid input",
-    ("cmd_injection", 2): "uid=33(www-data) gid=33(www-data) groups=33(www-data),1003(meditrack)",
-    ("cmd_injection", 3): "uid=33(www-data) gid=33(www-data) groups=33(www-data),1003(meditrack)",
-    ("ssrf", 0): "Connection refused",
-    ("ssrf", 1): "Connection refused",
-    ("ssrf", 2): FAKE_AWS_METADATA,
-    ("ssrf", 3): FAKE_AWS_METADATA,
     ("dir_enum", 0): "Not Found",
-    ("dir_enum", 1): "Not Found",
-    ("dir_enum", 2): '{"status": "requires_auth", "hint": "try /admin/debug or /backup/db.sql"}',
-    ("dir_enum", 3): '{"files": [".env", "config.py", "backup_nov14.sql.gz", "id_rsa.bak"]}',
-    ("auto_scanner", 0): "Not Found",
-    ("auto_scanner", 1): "Not Found",
-    ("auto_scanner", 2): "Not Found",
-    ("auto_scanner", 3): "Not Found",
-    ("xss", 0): "Input validation failed",
-    ("xss", 1): "Input validation failed",
-    ("brute_force", 0): '{"error": "Invalid credentials"}',
-    ("brute_force", 1): '{"error": "Invalid credentials"}',
+    ("dir_enum", 1): "Forbidden",
+    ("dir_enum", 2): json.dumps({"paths": ["/.env", "/config.json", "/backup/db.sql", "/admin/debug", "/internal/services"]}),
+    ("dir_enum", 3): json.dumps({"paths": ["/.env", "/config.json", "/backup/db.sql", "/admin/debug", "/internal/services", "/etc/passwd", "/.git/config"]}),
+    ("xss", 0): "<html><body>Not Found</body></html>",
+    ("xss", 1): "<html><body>Invalid input</body></html>",
+    ("xss", 2): "<html><body>Invalid input</body></html>",
+    ("brute_force", 0): '{"error":"Invalid Customer ID or Password"}',
+    ("brute_force", 1): '{"error":"Invalid Customer ID or Password"}',
+    ("brute_force", 2): '{"error":"Account temporarily locked. Contact support."}',
+    ("benign", 0): "Not Found",
 }
-
-
-def generate_fake_jwt(role: str = "admin") -> str:
-    header = base64.urlsafe_b64encode(
-        json.dumps({"alg": "HS256", "typ": "JWT"}).encode()
-    ).rstrip(b"=").decode()
-    exp = int((datetime.utcnow() + timedelta(hours=8)).timestamp())
-    payload_data = {
-        "sub": "42",
-        "email": "admin@meditrack.health",
-        "role": role,
-        "permissions": ["patients:read", "patients:write", "staff:read", "admin:full"],
-        "exp": exp,
-        "iat": int(time.time()),
-        "jti": "hp-" + "".join(random.choices(string.hexdigits[:16], k=10)),
-    }
-    payload = base64.urlsafe_b64encode(
-        json.dumps(payload_data).encode()
-    ).rstrip(b"=").decode()
-    sig = base64.urlsafe_b64encode(
-        hashlib.sha256(f"{header}.{payload}:CANARY_JWT_SECRET".encode()).digest()
-    ).rstrip(b"=").decode()
-    return f"{header}.{payload}.{sig}"
 
 
 def fake_shell_output(cmd: str) -> str:
     cmd = cmd.strip().lower()
-    if any(x in cmd for x in ["id", "whoami"]):
-        return "uid=33(www-data) gid=33(www-data) groups=33(www-data),1003(meditrack)\n"
-    if "ls" in cmd:
+    if "id" == cmd:
+        return "uid=33(www-data) gid=33(www-data) groups=33(www-data),1001(vaultbank)"
+    if "whoami" == cmd:
+        return "www-data"
+    if cmd.startswith("ls"):
+        return "app.py  config.py  fake_data.py  main.py  models.py  requirements.txt  session_manager.py"
+    if cmd.startswith("pwd"):
+        return "/opt/vaultbank/backend"
+    if cmd.startswith("ps"):
         return (
-            "total 64\n"
-            "drwxr-xr-x  8 meditrack meditrack 4096 Nov 14 03:01 .\n"
-            "drwxr-xr-x 12 root      root      4096 Sep  3 18:22 ..\n"
-            "-rw-------  1 meditrack meditrack  847 Nov 14 03:01 .env\n"
-            "-rw-r--r--  1 meditrack meditrack 2341 Oct 22 11:14 config.py\n"
-            "drwxr-xr-x  3 meditrack meditrack 4096 Sep  3 18:30 logs\n"
-            "-rwxr-xr-x  1 meditrack meditrack 8192 Nov 12 09:44 main.py\n"
-            "drwxr-xr-x  5 meditrack meditrack 4096 Sep  3 18:30 static\n"
-            "-rw-------  1 meditrack meditrack 1672 Aug 15 22:00 id_rsa\n"
+            "  PID TTY          TIME CMD\n"
+            " 1234 ?        00:12:33 python3.11\n"
+            " 1235 ?        00:00:01 nginx\n"
+            " 1236 ?        00:00:00 postgres\n"
         )
+    if cmd.startswith("cat /etc/passwd"):
+        return FAKE_PASSWD
+    if cmd.startswith("env") or cmd.startswith("printenv"):
+        return "APP_ENV=production\nCORE_BANKING_DB_URL=postgresql://vaultbank_app:***@ledger-db-primary.internal:5432/vaultbank_core\nJWT_SECRET=***"
     if "uname" in cmd:
-        return "Linux prod-meditrack-01 5.15.0-91-generic #101-Ubuntu SMP x86_64 GNU/Linux\n"
-    if "ps" in cmd or "netstat" in cmd:
-        return (
-            "tcp  0  0 0.0.0.0:80       0.0.0.0:*  LISTEN   nginx\n"
-            "tcp  0  0 127.0.0.1:8000   0.0.0.0:*  LISTEN   uvicorn\n"
-            "tcp  0  0 127.0.0.1:5432   0.0.0.0:*  LISTEN   postgres\n"
-            "tcp  0  0 127.0.0.1:6379   0.0.0.0:*  LISTEN   redis-server\n"
-        )
-    if "cat" in cmd and ".env" in cmd:
-        return FAKE_ENV
-    if "env" in cmd or "printenv" in cmd:
-        return "DB_PASSWORD=M3d!Tr4ck_Pr0d#2024_xK9\nJWT_SECRET=8f4e2b1c9d7a6e3f...\nSTRIPE_SECRET_KEY=sk_live_51Nxk...\n"
-    return f"bash: {cmd.split()[0] if cmd else 'cmd'}: permission denied\n"
+        return "Linux prod-vaultbank-core-01 5.15.0-1047-aws #54-Ubuntu SMP x86_64 GNU/Linux"
+    return f"sh: 1: {cmd.split()[0] if cmd else 'command'}: Permission denied"
+
+
+def generate_jwt(role: str = "customer", customer_id: str = "VB-8940192") -> str:
+    import base64
+    import json
+    header = base64.urlsafe_b64encode(
+        json.dumps({"alg": "HS256", "typ": "JWT"}).encode()
+    ).decode().rstrip("=")
+    payload = base64.urlsafe_b64encode(
+        json.dumps({
+            "sub": customer_id,
+            "role": role,
+            "account_access": ["409210924821", "409210929104"],
+            "branch": "VAUL0000409",
+            "iss": "vaultbank-auth-service",
+            "iat": int(time.time()),
+            "exp": int(time.time()) + 28800,
+        }).encode()
+    ).decode().rstrip("=")
+    sig = hashlib.sha256(f"{header}.{payload}".encode()).hexdigest()[:43]
+    return f"{header}.{payload}.{sig}"
+
+
+def canary_token() -> str:
+    ts = int(time.time())
+    return f"eyJhbGciOiJIUzI1NiIsInR5cCI6IkNBTkFSWSJ9.{hashlib.md5(str(ts).encode()).hexdigest()}"
